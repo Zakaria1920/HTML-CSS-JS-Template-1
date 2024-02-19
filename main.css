@@ -283,6 +283,9 @@ h3::before {
   z-index: 1;
   cursor: pointer;
 }
+.left-side .schedule .calendar-body .calendar-dates li:focus-visible {
+  background-color: inherit;
+}
 .left-side .schedule .calendar-dates li.inactive {
   color: #aaa;
 }
@@ -351,6 +354,15 @@ h3::before {
   height: 260px;
 }
 @media (max-width: 767px) {
+  .middle .slider img {
+    width: 376px;
+    height: 215px;
+  }
+  .middle .slider {
+    height: auto;
+  }
+}
+@media (max-width: 425px) {
   .middle .slider img {
     width: 329px;
     height: 215px;
