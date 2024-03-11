@@ -186,20 +186,90 @@ const dots = document.querySelectorAll(".dots .dot");
 const images = document.querySelector("ul.images");
 const imgs = document.querySelectorAll("ul.images img");
 
-function slider() {
-  images.style.transform = `translateX(-${
-    currSlide * parseInt(getComputedStyle(imgs[0]).width)
-  }px)`;
+let isDragging = false,
+  startPosi = 0,
+  currentTran = 0,
+  prevTrans = 0,
+  animationID = 0,
+  currentIndex = 0;
 
-  dots.forEach((dot) => {
-    dot.classList.remove("active");
+imgs.forEach((img, index) => {
+  img.addEventListener("dragstart", (e) => e.preventDefault());
+
+  // Touch events
+  img.addEventListener("touchstart", touchStart(index));
+  img.addEventListener("touchend", touchEnd);
+  img.addEventListener("touchmove", touchMove);
+});
+
+function touchStart(index) {
+  return function (event) {
+    currentIndex = index;
+    startPosi = event.touches[0].pageX;
+    isDragging = true;
+    animationID = requestAnimationFrame(animation);
+  };
+}
+
+function touchEnd() {
+  isDragging = false;
+  cancelAnimationFrame(animationID);
+
+  const moveBy = currentTran - prevTrans;
+
+  if (moveBy < -100 && currentIndex < imgs.length - 1) currentIndex += 1;
+
+  if (moveBy > 100 && currentIndex > 0) currentIndex -= 1;
+
+  setPositionByIndex();
+}
+
+function touchMove(event) {
+  if (isDragging) {
+    const currentPosition = event.touches[0].pageX;
+    currentTran = prevTrans + currentPosition - startPosi;
+  }
+}
+
+function animation() {
+  setSliderPos();
+  if (isDragging) requestAnimationFrame(animation);
+}
+
+function setSliderPos() {
+  images.style.transform = `translateX(${currentTran}px)`;
+}
+
+function setPositionByIndex() {
+  currentTran = currentIndex * -parseInt(getComputedStyle(images).width);
+  prevTrans = currentTran;
+  setSliderPos();
+  dotsFill();
+}
+
+function dotsFill() {
+  dots.forEach((e) => {
+    e.classList.remove("active");
   });
-  dots[currSlide].classList.add("active");
+  dots[currentIndex].classList.add("active");
+}
 
-  if (currSlide === imgs.length - 1) {
-    currSlide = 0;
-  } else {
-    currSlide++;
+function slider() {
+  if (parseInt(getComputedStyle(document.body).width) > 767) {
+    images.style.transform = `translateX(-${
+      currSlide * parseInt(getComputedStyle(imgs[0]).width)
+    }px)`;
+
+    dots.forEach((dot) => {
+      dot.classList.remove("active");
+    });
+    dots[currSlide].classList.add("active");
+
+    if (currSlide === imgs.length - 1) {
+      currSlide = 0;
+    } else {
+      currSlide++;
+    }
   }
 }
 slider();
@@ -223,6 +293,7 @@ document.addEventListener("click", (event) => {
     inter = setInterval(slider, 2000);
   }
 });
+
 //     ******* Slider *******
 
 //     ******* Latest Posts *******
@@ -294,10 +365,9 @@ function createNums() {
 }
 createNums();
 
-let isDragging = false,
-  startPos = 0,
-  currentTranslate = JSON.parse(localStorage.getItem("currTrans")) || 0,
-  animationID = 0;
+let startPos = 0,
+  currentTranslate = JSON.parse(localStorage.getItem("currTrans")) || 0;
+
 nums.style.transform = `translateX(${currentTranslate}px)`;
 nums.addEventListener("mousedown", startMove);
 nums.addEventListener("dragstart", (e) => e.preventDefault());
@@ -305,8 +375,6 @@ document.addEventListener("mouseup", endMove);
 
 function startMove(event) {
   startPos = event.pageX;
-  isDragging = true;
-  animationID = requestAnimationFrame(animation);
   nums.addEventListener("mousemove", clickMove);
 }
 
@@ -316,26 +384,20 @@ function clickMove(event) {
     parseInt(getComputedStyle(spans[0]).width) * spans.length +
     (spans.length - 1) * parseInt(getComputedStyle(nums).gap) -
     parseInt(getComputedStyle(numsCont).width);
-  if (isDragging) {
-    currentTranslate = Math.max(
-      Math.min(
-        event.pageX - startPos + +JSON.parse(localStorage.getItem("currTrans")),
-        0
-      ),
-      -numWidth
-    );
-  }
+  currentTranslate = Math.max(
+    Math.min(
+      event.pageX - startPos + +JSON.parse(localStorage.getItem("currTrans")),
+      0
+    ),
+    -numWidth
+  );
+  nums.style.transform = `translateX(${currentTranslate}px)`;
 }
 
 function endMove() {
   isDragging = false;
-  cancelAnimationFrame(animationID);
   localStorage.setItem("currTrans", JSON.stringify(currentTranslate));
   nums.removeEventListener("mousemove", clickMove);
-}
-function animation() {
-  nums.style.transform = `translateX(${currentTranslate}px)`;
-  if (isDragging) requestAnimationFrame(animation);
 }
 
 rows.style.transform = `translateY(-${
